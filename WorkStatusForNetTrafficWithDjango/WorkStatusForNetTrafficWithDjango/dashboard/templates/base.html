@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ZN-ch">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+        <title>控制台</title>
+    {% endblock %}
+    {% load static %}
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="{% static 'dashboard/css/indexBody.css' %}" rel="stylesheet">
+    <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    {#    <link rel="stylesheet" href="//cdn.jsdelivr.net/juery.metismenu/2.5.2/metisMenu.min.css">#}
+    {% block css %}
+    {% endblock %}
+</head>
+<body>
+
+
+<div class="wrapper">
+
+        <div class="container">
+            <div class="row">
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+
+</div>
+{% block bodyDiv %}
+{% endblock %}
+<script src="http://cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+<script src="http://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.js"></script>
+{#<script src="//cdn.jsdelivr.net/jquery.metismenu/2.5.2/metisMenu.min.js"></script>#}
+<script>
+
+
+</script>
+{% block js %}
+{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block bodyclass %}{{ block.super }} app-{{ app_label }}{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <div class="breadcrumbs">
+            <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+            &rsaquo;
+            {% for app in app_list %}
+                {{ app.name }}
+            {% endfor %}
+        </div>
+    {% endblock %}
+{% endif %}
+
+{% block sidebar %}
+    <div id="content-main">
+        <div class=" module">
+            <table>
+                <caption>
+                    <a href="/admin/dashboard/" class="section" title="">操作</a>
+                </caption>
+                <tbody>
+                <tr class="">
+
+                    <th scope="row">
+                        <a type="button" href="{% url 'startNaiveBayesMultinomialNBTask' %} ">启动文本分类任务</a>
+                    </th>
+                    <td></td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+{% endblock %}

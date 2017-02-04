@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    <title>控制台</title>
+{% endblock %}
+
+{% block css %}
+    <link href="{% static 'dashboard/css/custom-charts.css' %}" rel="stylesheet">
+    <style>
+    td{
+         max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    }
+    </style>
+
+{% endblock %}
+
+{% block content %}
+    <div class="col-md-12 col-lg-12">
+        <div id="chartContainer" class="col-md-12">
+
+            <div id="main" style="width: 100%;height:700px;"></div>
+        </div>
+
+    </div>
+
+
+
+
+{% endblock %}
+
+{% block bodyDiv %}
+
+
+    {#模态框#}
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span
+                            aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title" id="modal_title"></h4>
+                </div>
+                <div class="modal-body" style="overflow:auto">
+                    <div id="modal_body" ></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+{% endblock %}
+
+
+{% block js %}
+    <script src="{% static 'dashboard/js/echarts.min.js' %}"></script>
+
+
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var charts = [];
+
+
+        var myChart = echarts.init(document.getElementById('main'));
+        {#var container = document.getElementById('chartContainer');#}
+        // 指定图表的配置项和数据
+        option = {
+            title: {
+                text: '行为分析-日常折线图'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['IT', '购物', '军事', '编程', '娱乐', '游戏', '闲逛', '搜索', '生活', '学术']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            }, toolbox: {
+                feature: {
+                    dataZoom: {},
+                    brush: {
+                        type: ['clear']
+                    },
+                    saveAsImage: {},
+                    dataView: {readOnly: true}
+
+                }
+            },
+
+            xAxis: {
+                type: 'time'
+            },
+            yAxis: {
+                type: 'value'
+
+            }, dataZoom: [
+                {   // 这个dataZoom组件，默认控制x轴。
+                    type: 'slider', // 这个 dataZoom 组件是 slider 型 dataZoom 组件
+                    xAxisIndex: 0,
+                    start: 0,      // 左边在 10% 的位置。
+                    end: 100         // 右边在 60% 的位置。
+                },
+                {   // 这个dataZoom组件，也控制x轴。
+                    type: 'inside', // 这个 dataZoom 组件是 inside 型 dataZoom 组件
+                    xAxisIndex: 0,
+                    start: 0,      // 左边在 10% 的位置。
+                    end: 100         // 右边在 60% 的位置。
+                }
+            ],
+            series: []
+        };
+
+
+        $.getJSON("{% url 'TitleCategoryList-list' %}", "minTimestamp=" + 1478499435 + "&maxTimestamp=" + 1479519745 + "&type=line", function (json) {
+            data = json['data'];
+            series = [];
+            i = 0;
+
+            for (var key in data) {
+                {#                var eDiv = document.createElement('div');#}
+                {#                eDiv.id = 'chart_' + i;#}
+                {#                eDiv.style.height = '200px';#}
+                {#                eDiv.style.width = '100%';#}
+
+
+                charts.push(myChart);
+                {#                                series.push({#}
+                {#                                    'name': i, type: 'scatter',#}
+                {#                                    'itemStyle': {#}
+                {#                                        'normal': {#}
+                {#                                            'opacity': 0.8#}
+                {#                                        }#}
+                {#                                    },#}
+                {#                                    'symbolSize': function (val) {#}
+                {#                                        return val[1] * 1;#}
+                {#                                    }, 'data': data[i]#}
+                {#                                });#}
+                series.push({
+                    'name': key, 'type': 'line',
+                    'data': data[key]
+                });
+                option.series = series;
+
+
+            }
+            myChart.on('click', function (params) {
+
+                getItems(params);
+            });
+            myChart.setOption(option);
+
+
+        });
+
+        function getItems(params) {
+
+            var category = params.seriesName;
+            var d = new Date(params.value[0]);
+            var minTimestamp = Date.parse(d) / 1000;
+            d.setHours(d.getHours() + 1);
+            var maxTimestamp = Date.parse(d) / 1000;
+
+            $.getJSON("{% url 'TitleCategoryList-list' %}", "minTimestamp=" + minTimestamp + "&maxTimestamp=" + maxTimestamp + "&type=query" + "&category=" + category, function (json) {
+                data = json['data'];
+
+                $('#modal_title').text(category+" "+params.value[0]);
+                var strTable='<table class="table">';
+                strTable+='<tr> <th>#</th> <th>网页标题</th> <th>时间</th> <th>URL</th> </tr><tbody>';
+                for (var i in data){
+                    var num=parseInt(i)+1;
+                    strTable+='<tr> <td>'+num+'</td> <td title="'+data[i][0]+'">'+data[i][0]+'</td> <td>'+data[i][1]+'</td> <td><a href="'+data[i][2]+'">'+data[i][2]+'</a></td> </tr>';
+                }
+                strTable+='</tbody></table>';
+                $('#modal_body').html(strTable);
+                $('#myModal').modal('toggle');
+            });
+        }
+$('.modal').on('shown.bs.modal', function(){
+    var margin_vertical = parseInt( $(this).find('.modal-dialog').css('margin-top') ) + parseInt( $(this).find('.modal-dialog').css('margin-bottom') );
+    var height_header   = parseInt( $(this).find('.modal-header').css('height') );
+    var height_footer   = parseInt( $(this).find('.modal-footer').css('height') );
+    var height_body     = ( window.innerHeight - height_header - height_footer - margin_vertical - 10 ) + 'px';
+    $(this).find('.modal-body').css('max-height', height_body).css('overflow', 'auto');
+});
+        // 使用刚指定的配置项和数据显示图表。
+
+    </script>
+{% endblock %}

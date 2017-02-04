@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    <title>控制台</title>
+{% endblock %}
+
+{% block css %}
+    <link href="{% static 'dashboard/css/custom-charts.css' %}" rel="stylesheet">
+    <link href="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.43/css/bootstrap-datetimepicker.min.css"
+          rel="stylesheet">
+    <style>
+        .tds {
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+
+{% endblock %}
+
+{% block content %}
+
+
+    <div class="col-md-12 col-lg-12" style="top: 50px">
+
+        <div class="col-md-7 col-lg-7">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+
+
+                    <div class="row">
+                        <div class="col-md-8 col-lg-8 col-sm-8">
+
+                            <h4>上网行为分布情况</h4>
+                            <h6 id="pieTimeTitle">时间段</h6>
+                        </div>
+                        <div class="col-md-4 col-lg-4 col-sm-4 text-right">
+                            <button type="button" class="btn  " onclick="showDateSelect()">选择时间</button>
+                            <button type="button" class="btn " onclick="getTodayPie()">刷新</button>
+
+                        </div>
+
+                    </div>
+                    <div id="datetimepicker-block" style="padding-top: 6px" class="row" hidden>
+
+                        <div class='col-md-5 col-lg-5 col-sm-5'>
+
+                            <input type='text' id='datetimepicker1' class="form-control" readonly="readonly"/>
+
+                        </div>
+                        <div class='col-md-1 col-lg-1 col-sm-1' style="padding-top: 6px">
+                            至
+                        </div>
+                        <div class='col-md-5 col-lg-5 col-sm-5'>
+
+                            <input type='text' id='datetimepicker2' class="form-control" readonly="readonly"/>
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <div class="panel-body">
+                    <div id="today" style="width: 100%;height:450px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 col-lg-5">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row clearfix">
+                        <div class="col-md-12 col-lg-12" >
+                            <span>建议</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="tipsContainer" style="width: 100%;height:492px;overflow: auto;font-size: 16px">
+
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-12 col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-8 col-lg-8 col-sm-8">
+
+                            <h4>最近上网情况-折线图（<span id="lineDays"></span>）</h4>
+                            <h6 id="lineTimeTitle">时间段</h6>
+                        </div>
+                        <div class="col-md-4 col-lg-4 col-sm-4 text-right">
+                            <button type="button" class="btn  " onclick="showDateSelectLine()">选择时间</button>
+                            <button type="button" class="btn " onclick="getWeekLine()">刷新</button>
+
+                        </div>
+
+                    </div>
+                    <div id="datetimepicker-block2" style="padding-top: 6px" class="row" hidden>
+
+                        <div class='col-md-5 col-lg-5 col-sm-5'>
+
+                            <input type='text' id='datetimepicker3' class="form-control" readonly="readonly"/>
+
+                        </div>
+                        <div class='col-md-1 col-lg-1 col-sm-1' style="padding-top: 6px">
+                            至
+                        </div>
+                        <div class='col-md-5 col-lg-5 col-sm-5'>
+
+                            <input type='text' id='datetimepicker4' class="form-control" readonly="readonly"/>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="main" style="width: 100%;height:512px;"></div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+
+{% endblock %}
+
+{% block bodyDiv %}
+
+
+    {#模态框#}
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="border-bottom: 0px solid #e5e5e5;padding-bottom: 0px;">
+                    <button type="button" class="close" data-dismiss="modal"><span
+                            aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title" id="modal_title"></h4>
+                </div>
+                <div class="modal-body" style="overflow:auto">
+                    <div id="modal_body"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+{% endblock %}
+
+
+{% block js %}
+    <script src="{% static 'dashboard/js/echarts.min.js' %}"></script>
+    <script src="//cdn.bootcss.com/moment.js/2.15.2/moment.min.js"></script>
+    <script src="//cdn.bootcss.com/moment.js/2.15.2/locale/zh-cn.js"></script>
+    <script src="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.43/js/bootstrap-datetimepicker.min.js"></script>
+
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+
+
+        var myChart = echarts.init(document.getElementById('main'));
+        var myChartToday = echarts.init(document.getElementById('today'));
+        {#var container = document.getElementById('chartContainer');#}
+        // 指定图表的配置项和数据
+
+        // 时间以UTC为准
+        // 设置当前时间
+        var now = new Date;
+        {#        now.setHours(0);#}
+        {#        var today_min_utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),#}
+        {#                now.getUTCHours(), 0, 0, 0);#}
+        {#        var today_min_utc_timestamp = Math.floor(today_min_utc / 1000);#}
+        {#        var today_max_utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1,#}
+        {#                now.getUTCHours(), 0, 0, 0);#}
+        {#        var today_max_utc_timestamp = Math.floor(today_max_utc / 1000);#}
+        // 设置为一天的初始值
+        now.setHours(0);
+        now.setMinutes(0);
+        now.setSeconds(0);
+        now.setMilliseconds(0);
+        // 获取timestamp
+        var today_min_utc = now / 1;
+        // 取消掉微秒
+        var today_min_utc_timestamp = Math.floor(now / 1000);
+        
+        // 饼图开始时间初始化
+        $('#datetimepicker1')
+                .datetimepicker({
+                    defaultDate: today_min_utc,
+                    ignoreReadonly: true,
+                    sideBySide: true,
+                    format: "YYYY-MM-DD HH:mm:ss"
+                })
+                .on('dp.hide', function (event) {
+                    var selectD = event.date._d;
+                    // 获取时间的utc timestamp
+                    var minTime = Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+                                    selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000);
+                    // console.log('1',Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+                    //                 selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000));
+                    //console.log(Math.floor(selectD / 1000));
+                    // 刷新数据
+                    console.log('dp2',Math.floor(dp2.date()._d / 1000))
+                    getTodayPie(minTime, Math.floor(dp2.date()._d / 1000));
+                });
+
+        // 饼图结束时间初始化
+        // 获取一天的最后日期
+        now.setDate(now.getDate() + 1);
+        var today_max_utc = now / 1;
+        var today_max_utc_timestamp = Math.floor(now / 1000);
+
+        $('#datetimepicker2').datetimepicker({
+            defaultDate: today_max_utc,
+            ignoreReadonly: true,
+            sideBySide: true,
+            format: "YYYY-MM-DD HH:mm:ss"
+        }).on('dp.hide', function (event) {
+            var selectD = event.date._d;
+            var maxTime = Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+                            selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000);
+            // console.log(Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+            //                 selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000));
+            console.log('dp1',Math.floor(dp1.date()._d / 1000));
+            getTodayPie(Math.floor(dp1.date()._d / 1000), maxTime);
+
+        });
+        var dp1 = $('#datetimepicker1').data("DateTimePicker");
+        var dp2 = $('#datetimepicker2').data("DateTimePicker");
+
+        function showDateSelect() {
+            $('#datetimepicker-block').toggle(200);
+        }
+
+        function getTodayPie(minTime, maxTime) {
+            if (isNaN(minTime) || isNaN(maxTime)) {
+                minTime = today_min_utc_timestamp;
+                maxTime = today_max_utc_timestamp;
+            }
+            $('#pieTimeTitle').text(formatDate(minTime) + " - \n\r" + formatDate(maxTime));
+            myChartToday.showLoading();
+            // 设置饼图参数
+            var option_today = {
+                legend: {
+                    data: null,
+                    textStyle: {
+                        fontSize: 20,
+                        fontWeight: 'normal'
+                    }
+                },
+                {#                title: {#}
+                {#                    text: '',#}
+                {#                    left: 'center',#}
+                {#                    top: 20,#}
+                {#                    textStyle: {#}
+                {#                        color: '#ccc'#}
+                {#                    }#}
+                {#                },#}
+
+                tooltip: {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+
+
+                series: [
+                    {
+                        name: '访问情况',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '60%'],
+                        data: [],
+                        roseType: 'angle'
+                    }
+                ]
+            };
+
+            // 获取数据
+            $.getJSON("{% url 'TitleCategoryList-list' %}", "minTimestamp=" + minTime + "&maxTimestamp=" + maxTime + "&type=pie", function (json) {
+                data = json['data'];
+                categorylist = json['categoryList'];
+                datas = [];
+
+                for (var key in data) {
+                    datas.push({
+                        'name': key,
+                        'value': data[key],
+                        label:{normal:{textStyle:{fontSize:20}}}
+                    });
+
+                }
+                // 添加建议
+                tips = json['tips'];
+                if (tips) {
+                    var t = "<h6>" + formatDate(minTime) + " - " + formatDate(maxTime) + "</h6>";
+                    for (var item in tips) {
+                        t += tips[item] + "<br>"
+                    }
+                    // t += "请注意合理安排上网计划";
+                    var text = '<div class="alert alert-warning alert-dismissible fade in " role="alert">'
+                            + '<button type="button" class="close" data-dismiss="alert">'
+                            + '<span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>'
+                            + t
+                            + '</div>';
+                    var ins = $(text);
+                    ins.hide();
+                    $('#tipsContainer').prepend(ins);
+                    ins.slideToggle(500);
+                }
+
+                option_today.series[0]['data'] = datas.sort(function (a, b) {
+                    return a.value - b.value
+                });
+                
+                // 添加点击时间
+                myChartToday.off('click')
+                myChartToday.on('click', function (params) {
+                    console.log('pie click', minTime, maxTime, params.name);
+                    //getItems(params, today_min_utc_timestamp, today_max_utc_timestamp, params.name);
+                    getItems(params, minTime, maxTime, params.name);
+                });
+                option_today.legend.data = categorylist;
+                myChartToday.setOption(option_today);
+                myChartToday.hideLoading();
+            });
+        }
+        getTodayPie();
+
+        // 设置当前时间前7天的时间
+        var week_now = new Date();
+        // 当前时间
+        var week_max_utc = week_now / 1;
+        var week_max_utc_timestamp = Math.floor(week_now / 1000);
+
+        week_now.setDate(week_now.getDate() - 7);
+        var week_min_utc = week_now / 1;
+        var week_min_utc_timestamp = Math.floor(week_now / 1000);
+
+        // 折线图的开始时间
+        $('#datetimepicker3')
+                .datetimepicker({
+                    defaultDate: week_min_utc,
+                    ignoreReadonly: true,
+                    sideBySide: true,
+                    format: "YYYY-MM-DD HH:mm:ss"
+                })
+                .on('dp.hide', function (event) {
+                    var selectD = event.date._d;
+                    var minTime = Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+                                    selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000);
+                    // console.log(Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+                    //                 selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000));
+                    console.log('dp4',Math.floor(dp4.date()._d / 1000));
+                    // 更新数据
+                    getWeekLine(minTime, Math.floor(dp4.date()._d / 1000));
+                });
+
+        // 折线图的结束时间
+        $('#datetimepicker4').datetimepicker({
+            defaultDate: week_max_utc,
+            ignoreReadonly: true,
+            sideBySide: true,
+            format: "YYYY-MM-DD HH:mm:ss"
+        }).on('dp.hide', function (event) {
+            var selectD = event.date._d;
+            var maxTime = Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+                            selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000);
+            // console.log(Math.floor(Date.UTC(selectD.getUTCFullYear(), selectD.getUTCMonth(), selectD.getUTCDate(),
+            //                 selectD.getUTCHours(), selectD.getUTCMinutes(), selectD.getUTCSeconds(), 0) / 1000));
+            console.log('dp3',Math.floor(dp3.date()._d / 1000));
+            getWeekLine(Math.floor(dp3.date()._d / 1000), maxTime);
+
+        });
+
+        var dp3 = $('#datetimepicker3').data("DateTimePicker");
+        var dp4 = $('#datetimepicker4').data("DateTimePicker");
+
+        function showDateSelectLine() {
+            $('#datetimepicker-block2').toggle(200);
+        }
+
+        // 获取周时间数据，并更新图
+        function getWeekLine(minTime, maxTime) {
+            myChart.showLoading();
+            if (isNaN(minTime) || isNaN(maxTime)) {
+                minTime = week_min_utc_timestamp;
+                maxTime = week_max_utc_timestamp;
+            }
+            option = {
+                title: {
+                    text: '',
+                    textStyle: {
+                        fontSize: 18,
+                        fontWeight: 'normal'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: null,
+                    textStyle: {
+                        fontSize: 20,
+                        fontWeight: 'normal'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                }, toolbox: {
+                    orient:'vertical',
+                    feature: {
+                        dataZoom: {},
+                        brush: {
+                            type: ['clear']
+                        },
+                        saveAsImage: {},
+                        dataView: {readOnly: true}
+
+                    }
+                },
+
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value'
+
+                }, dataZoom: [
+                    {   // 这个dataZoom组件，默认控制x轴。
+                        type: 'slider', // 这个 dataZoom 组件是 slider 型 dataZoom 组件
+                        xAxisIndex: 0,
+                        start: 0,      // 左边在 10% 的位置。
+                        end: 100         // 右边在 60% 的位置。
+                    },
+                    {   // 这个dataZoom组件，也控制x轴。
+                        type: 'inside', // 这个 dataZoom 组件是 inside 型 dataZoom 组件
+                        xAxisIndex: 0,
+                        start: 0,      // 左边在 10% 的位置。
+                        end: 100         // 右边在 60% 的位置。
+                    }
+                ],
+                series: []
+            };
+
+            $('#lineTimeTitle').text(formatDate(minTime) + " - " + formatDate(maxTime));
+            $('#lineDays').text(((maxTime-minTime)/60/60/24).toFixed(1)+"天");
+            $.getJSON("{% url 'TitleCategoryList-list' %}", "minTimestamp=" + minTime + "&maxTimestamp=" + maxTime + "&type=line", function (json) {
+                data = json['data'];
+                categorylist = json['categoryList'];
+                series = [];
+                i = 0;
+
+                for (var key in data) {
+                    {#                var eDiv = document.createElement('div');#}
+                    {#                eDiv.id = 'chart_' + i;#}
+                    {#                eDiv.style.height = '200px';#}
+                    {#                eDiv.style.width = '100%';#}
+
+
+                    //charts.push(myChart);
+                    {#                                series.push({#}
+                    {#                                    'name': i, type: 'scatter',#}
+                    {#                                    'itemStyle': {#}
+                    {#                                        'normal': {#}
+                    {#                                            'opacity': 0.8#}
+                    {#                                        }#}
+                    {#                                    },#}
+                    {#                                    'symbolSize': function (val) {#}
+                    {#                                        return val[1] * 1;#}
+                    {#                                    }, 'data': data[i]#}
+                    {#                                });#}
+                    series.push({
+                        'name': key, 'type': 'line',
+                        'data': data[key]
+                    });
+                    option.series = series;
+
+
+                }
+                myChart.off('click')
+                myChart.on('click', function (params) {
+                var d = new Date(params.value[0]);
+                var min_week_items_Timestamp = Date.parse(d) / 1000;
+                d.setHours(d.getHours() + 1);
+                var max_week_items_Timestamp = Date.parse(d) / 1000;
+                    getItems(params,min_week_items_Timestamp,max_week_items_Timestamp,params.seriesName);
+                });
+                option.legend.data = categorylist;
+                myChart.setOption(option);
+                myChart.hideLoading();
+
+            });
+        }
+
+        getWeekLine();
+        var test;
+
+        // 获取某一时间段内某一关键字的列表
+        function getItems(params, minTime, maxTime, tmpCategory) {
+            var category = "";
+            if (tmpCategory) {
+                category = tmpCategory;
+            } else {
+
+                category = params.seriesName;
+            }
+            
+            var minTimestamp = 0;
+            var maxTimestamp = 0;
+            if (minTime && maxTime) {
+                minTimestamp = minTime;
+                maxTimestamp = maxTime;
+            }
+            else {
+                
+            }
+            test=params;
+            console.log(minTimestamp,maxTimestamp,category,params);
+            $('#modal_title').html('<h3>' + category + "</h3><h5>" + formatDate(minTimestamp) + ' - '+formatDate(maxTimestamp) + '</h5>');
+            $.getJSON("{% url 'TitleCategoryList-list' %}", "minTimestamp=" + minTimestamp + "&maxTimestamp=" + maxTimestamp + "&type=query" + "&category=" + category, function (json) {
+                data = json['data'];
+                
+                
+                var strTable = '<table class="table">';
+                strTable += '<tr> <th>#</th> <th>网页标题</th> <th>时间</th> <th>URL</th> </tr><tbody>';
+                for (var i in data) {
+                    var num = parseInt(i) + 1;
+                    strTable += '<tr> <td class="tds">' + num + '</td> <td class="tds" title="' + data[i][0] + '">' + data[i][0] + '</td> <td class="tds">' + data[i][1] + '</td> <td class="tds"><a href="' + data[i][2] + '">' + data[i][2] + '</a></td> </tr>';
+                }
+                strTable += '</tbody></table>';
+                $('#modal_body').html(strTable);
+                $('#myModal').modal('show');
+            });
+        }
+        $('.modal').on('shown.bs.modal', function () {
+            var margin_vertical = parseInt($(this).find('.modal-dialog').css('margin-top')) + parseInt($(this).find('.modal-dialog').css('margin-bottom'));
+            var height_header = parseInt($(this).find('.modal-header').css('height'));
+            var height_footer = parseInt($(this).find('.modal-footer').css('height'));
+            var height_body = ( window.innerHeight - height_header - height_footer - margin_vertical - 10 ) + 'px';
+            $(this).find('.modal-body').css('max-height', height_body).css('overflow', 'auto');
+        });
+        // 使用刚指定的配置项和数据显示图表。
+
+        //时间转换 
+        function formatDate(now) {
+            var now = new Date(now * 1000);
+            var year = now.getFullYear();
+            var month = now.getMonth() + 1;
+            var date = now.getDate();
+            var hour = now.getHours();
+            var minute = now.getMinutes();
+            var second = now.getSeconds();
+            return year + "年" + fixZero(month, 2) + "月" + fixZero(date, 2) + "日 " + fixZero(hour, 2) + ":" + fixZero(minute, 2) + ":" + fixZero(second, 2);
+        }
+        //时间如果为单位数补0 
+        function fixZero(num, length) {
+            var str = "" + num;
+            var len = str.length;
+            var s = "";
+            for (var i = length; i-- > len;) {
+                s += "0";
+            }
+            return s + str;
+        }
+    </script>
+{% endblock %}
+

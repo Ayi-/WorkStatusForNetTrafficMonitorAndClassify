@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ZN-ch">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+        <title>控制台</title>
+    {% endblock %}
+    {% load static %}
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'dashboard/css/metisMenu.min.css' %}" rel="stylesheet">
+    <link href="{% static 'dashboard/css/metisMenuStyle.css' %}" rel="stylesheet">
+    <link href="{% static 'dashboard/css/indexBody.css' %}" rel="stylesheet">
+    <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    {#    <link rel="stylesheet" href="//cdn.jsdelivr.net/juery.metismenu/2.5.2/metisMenu.min.css">#}
+    {% block css %}
+    {% endblock %}
+</head>
+<body>
+
+
+<div class="wrapper">
+    <nav class="navbar navbar-inverse navbar-top-custom navbar-static-top navbar-fixed-top" role="navigation">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Brand</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">Link</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#">Action</a></li>
+                            <li><a href="#">Another action</a></li>
+                            <li><a href="#">Something else here</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#">Separated link</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div><!-- /.navbar-collapse -->
+            <div class="sidebar">
+                <nav class="sidebar-nav">
+                    <ul class="metismenu" id="menu">
+                        <li >
+                            <a href="./">
+                                总览
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" aria-expanded="true">
+                                <span class="sidebar-nav-item-icon fa fa-github fa-lg"></span>
+                                <span class="sidebar-nav-item">metisMenu</span>
+                                <span class="fa arrow fa-fw"></span>
+                            </a>
+                            <ul aria-expanded="false" class="collapse" style="height: 0px;">
+                                <li>
+                                    <a href="./test" class="active">
+                                        <span class="sidebar-nav-item-icon fa fa-code-fork fa-fw"></span>
+                                        测试
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://github.com/onokumus/metisMenu">
+                                        <span class="sidebar-nav-item-icon fa fa-star fa-fw"></span>
+                                        Star
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://github.com/onokumus/metisMenu/issues">
+                                        <span class="sidebar-nav-item-icon fa fa-exclamation-triangle fa-fw"></span>
+                                        Issues
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" aria-expanded="false">Menu 0 <span class="fa arrow fa-fw"></span></a>
+                            <ul aria-expanded="false" class="collapse">
+                                <li><a href="#">item 0.1</a></li>
+                                <li><a href="#">item 0.2</a></li>
+                                <li><a href="http://onokumus.com">onokumus</a></li>
+                                <li><a href="#">item 0.4</a></li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="container">
+            <div class="row">
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% block bodyDiv %}
+{% endblock %}
+<script src="http://cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+<script src="http://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.js"></script>
+<script src="{% static 'dashboard/js/metisMenu.js' %}"></script>
+{#<script src="//cdn.jsdelivr.net/jquery.metismenu/2.5.2/metisMenu.min.js"></script>#}
+<script>
+
+    $("#menu").metisMenu({
+        activeClass: 'active',
+        collapseClass: 'collapse'
+    });
+
+
+
+</script>
+{% block js %}
+{% endblock %}
+
+</body>
+</html>
